@@ -279,6 +279,94 @@
             background-color: #c0392b;
         }
         
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            animation: modalFadeIn 0.3s;
+        }
+        
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h2 {
+            color: #2c3e50;
+            font-size: 24px;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
         /* Responsive Styles */
         @media (max-width: 992px) {
             .sidebar {
@@ -343,6 +431,11 @@
             .search-filter {
                 flex-direction: column;
             }
+            
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -354,7 +447,7 @@
         <div class="content-header">
             <h1><i class="fas fa-box-open"></i> Tap Inventory</h1>
             <div class="inventory-actions">
-                <button class="btn btn-primary"><i class="fas fa-plus"></i> Add New Tap</button>
+                <button id="addTapBtn" class="btn btn-primary"><i class="fas fa-plus"></i> Add New Tap</button>
                 <button class="btn btn-success"><i class="fas fa-file-export"></i> Export Data</button>
             </div>
             
@@ -454,12 +547,148 @@
         </table>
     </div>
     
+    <!-- Add New Tap Modal -->
+    <div id="addTapModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-plus-circle"></i> Add New Tap</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <form id="tapForm">
+                <div class="form-group">
+                    <label for="tapModel">Tap Model</label>
+                    <input type="text" id="tapModel" name="tapModel" placeholder="Enter tap model name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tapSize">Size</label>
+                    <select id="tapSize" name="tapSize" required>
+                        <option value="">Select size</option>
+                        <option value="1/2">Small (1/2")</option>
+                        <option value="3/4">Medium (3/4")</option>
+                        <option value="1">Large (1")</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tapColor">Color</label>
+                    <select id="tapColor" name="tapColor" required>
+                        <option value="">Select color</option>
+                        <option value="Chrome">Chrome</option>
+                        <option value="Brass">Brass</option>
+                        <option value="Black">Black</option>
+                        <option value="Gold">Gold</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tapStock">Initial Stock</label>
+                    <input type="number" id="tapStock" name="tapStock" placeholder="Enter initial stock quantity" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tapDescription">Description (Optional)</label>
+                    <textarea id="tapDescription" name="tapDescription" placeholder="Enter tap description"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-danger close-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Tap</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <script>
-        // Add new tap button functionality
-        document.querySelector('.btn-primary').addEventListener('click', function() {
-            alert('Add new tap form would open here');
-            // In a real application, you would show a modal or redirect to a form page
+        // Modal functionality
+        const modal = document.getElementById('addTapModal');
+        const addTapBtn = document.getElementById('addTapBtn');
+        const closeBtns = document.querySelectorAll('.close-btn');
+        const tapForm = document.getElementById('tapForm');
+        
+        // Open modal when Add New Tap button is clicked
+        addTapBtn.addEventListener('click', function() {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden'; // Prevent scrolling when modal is open
         });
+        
+        // Close modal when X button or Cancel button is clicked
+        closeBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto'; // Re-enable scrolling
+                tapForm.reset(); // Reset form fields
+            });
+        });
+        
+        // Close modal when clicking outside the modal content
+        window.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                modal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+                tapForm.reset();
+            }
+        });
+        
+        // Form submission
+        tapForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Get form values
+            const model = document.getElementById('tapModel').value;
+            const size = document.getElementById('tapSize').value;
+            const color = document.getElementById('tapColor').value;
+            const stock = document.getElementById('tapStock').value;
+            const description = document.getElementById('tapDescription').value;
+            
+            // In a real application, you would send this data to a server
+            console.log('New tap added:', {
+                model,
+                size,
+                color,
+                stock,
+                description
+            });
+            
+            // Here you would typically add the new tap to the table
+            // For demonstration, we'll just show an alert
+            alert(`New tap "${model}" added successfully!`);
+            
+            // Close the modal and reset the form
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+            tapForm.reset();
+            
+            // In a real app, you would update the table with the new data
+            // addTapToTable(model, size, color, stock);
+        });
+        
+        // Function to add a new tap to the table (for demonstration)
+        function addTapToTable(model, size, color, stock) {
+            const table = document.querySelector('.inventory-table tbody');
+            const newRow = document.createElement('tr');
+            
+            // Determine color swatch
+            let swatchColor = '#c0c0c0'; // default chrome
+            if (color === 'Brass') swatchColor = '#cd7f32';
+            if (color === 'Black') swatchColor = '#000000';
+            if (color === 'Gold') swatchColor = '#ffd700';
+            
+            newRow.innerHTML = `
+                <td>${model}</td>
+                <td>${size}"</td>
+                <td><span class="color-swatch" style="background-color: ${swatchColor};"></span> ${color}</td>
+                <td class="stock">${stock}</td>
+                <td>
+                    <div class="action-btns">
+                        <button class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
+                        <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                    </div>
+                </td>
+            `;
+            
+            table.appendChild(newRow);
+        }
     </script>
 </body>
 </html>
